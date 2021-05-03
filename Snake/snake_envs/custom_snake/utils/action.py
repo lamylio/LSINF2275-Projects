@@ -1,13 +1,12 @@
 from numpy import arange
-from numpy.random import choice
+from numpy.random import randint
 
 class Action():
     def __init__(self, nb_actions):
         self.n = nb_actions
-        self.actions = arange(nb_actions)
 
     def sample(self):
-        return choice(self.actions)
+        return randint(self.n)
 
     def toString(self, action):
         if action == 0:
