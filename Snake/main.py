@@ -1,12 +1,10 @@
-import gym
-import snake_envs
+from custom_snake.custom_snake import SnakeEnv
 
 import numpy as np
 import matplotlib.pyplot as plt
 import random
 
-# Idk why I used gym as it is useless
-env = gym.make('CustomSnake-v0', board_size=[21,21])
+env = SnakeEnv([21,21])
 
 action_size = env.action_space.n
 state_x, state_y = env.board_size

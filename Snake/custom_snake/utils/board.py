@@ -1,6 +1,6 @@
 from numpy import array, zeros, where, reshape
 from numpy.random import randint, choice
-from snake_envs.custom_snake.utils.snake import Snake
+from custom_snake.utils.snake import Snake
 
 class Board():
 

@@ -1,11 +1,9 @@
-import gym, numpy as np, matplotlib.pyplot as plt
+import numpy as np, matplotlib.pyplot as plt
 
-from snake_envs.custom_snake.utils.action import Action
-from snake_envs.custom_snake.utils.board import Board
+from custom_snake.utils.action import Action
+from custom_snake.utils.board import Board
 
-class SnakeEnv(gym.Env):
-    metadata = {'render.modes': ['human']}
-
+class SnakeEnv():
     def __init__(self, board_size=[20,20], size_factor=1):
         self.action_space = Action(4)
         self.observation_space = int((board_size[0] * board_size[1]) / (size_factor*size_factor))
@@ -26,7 +24,7 @@ class SnakeEnv(gym.Env):
         self.board.reset()
         return self.board.snake.head
 
-    def render(self, mode='human', close=False, frame_speed=.1):
+    def render(self, close=False, frame_speed=.1):
         if close and self.viewer is not None:
             plt.close(self.fig)
             self.viewer.clear()
