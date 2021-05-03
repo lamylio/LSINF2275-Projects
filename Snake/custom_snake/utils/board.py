@@ -19,9 +19,8 @@ class Board():
         "FOOD": array([204, 51, 0], dtype="uint8")
     }
 
-    def __init__(self, board_size, size_factor):
+    def __init__(self, board_size):
         self.board_size = board_size
-        self.size_factor = size_factor
 
         self.x, self.y = board_size
         self.display = zeros((self.x, self.y, 3), dtype="uint8")
@@ -35,7 +34,6 @@ class Board():
 
     def step(self, action):
         self.snake.step(action)
-
         rewards = self.step_results()
         if rewards > 0: 
             self.update_food()
@@ -75,14 +73,14 @@ class Board():
         if(self.off_board(self.snake.head)): 
             return -1
 
-        # Food eaten
-        if(self.get_type(self.snake.head) == self.BOARD_VALUES.get("FOOD")): 
-            return 10
-            print("FOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOD")
-
         # Snake is dead by eating his body
         if(self.get_type(self.snake.head) == self.BOARD_VALUES.get("SNAKE_BODY")):
             return -2
+
+        # Food eaten
+        if(self.get_type(self.snake.head) == self.BOARD_VALUES.get("FOOD")): 
+            return 10
+
 
         # None
         return 0

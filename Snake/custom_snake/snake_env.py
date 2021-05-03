@@ -4,13 +4,12 @@ from custom_snake.utils.action import Action
 from custom_snake.utils.board import Board
 
 class SnakeEnv():
-    def __init__(self, board_size=[20,20], size_factor=1):
+    def __init__(self, board_size=[20,20]):
         self.action_space = Action(4)
-        self.observation_space = int((board_size[0] * board_size[1]) / (size_factor*size_factor))
+        self.observation_space = int(board_size[0] * board_size[1])
 
         self.board_size = board_size
-        self.size_factor = size_factor
-        self.board = Board(board_size, size_factor)
+        self.board = Board(board_size)
 
         self.viewer = None
         self.fig = None
@@ -33,13 +32,11 @@ class SnakeEnv():
             return
 
         if self.viewer is None:
+            plt.gcf().canvas.set_window_title('Snake')
             plt.suptitle('Snake board')
-            plt.gcf().canvas.set_window_title('Snake played by a Q-Value Reinforcement Learning Algorithm')
             self.viewer= plt.subplot(111)
-            self.viewer.set_title("Snake")
             self.viewer.xaxis.set_visible(False)
             self.viewer.yaxis.set_visible(False)
-            plt.ioff()
         else:
             self.viewer.clear()
             self.viewer.imshow(self.board.display)

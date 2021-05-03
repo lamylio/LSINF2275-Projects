@@ -1,17 +1,17 @@
-from custom_snake.custom_snake import SnakeEnv
+from custom_snake.snake_env import SnakeEnv
 
 import numpy as np
 import matplotlib.pyplot as plt
 import random
 
-env = SnakeEnv([21,21])
+env = SnakeEnv([25,25])
 
 action_size = env.action_space.n
 state_x, state_y = env.board_size
 
 # TO BE DEFINED
 LOOKUP = 1
-Q = np.zeros((21, 21, action_size))
+Q = np.zeros((5, 5, action_size))
 
 # HYPERPARAMETERS
 train_episodes = 1000000
@@ -37,27 +37,27 @@ for episode in range(train_episodes):
     # state = env.board.around_snake(LOOKUP)
 
     for step in range(max_steps):
-        if epsilon < 0.012: env.render(frame_speed=.001)
+        
         state = np.subtract(env.board.snake.head, env.board.food)
-        # print(Q[state[0], state[1]])
 
-        if random.uniform(0, 1) > epsilon: 
-            action = np.argmax(Q[state[0],state[1],:])
-        else:
-            action = env.action_space.sample()
+        # if random.uniform(0, 1) > epsilon: 
+        #     action = np.argmax(Q[state[0],state[1],:])
+        # else:
+        action = env.action_space.sample()
 
         new_pos, reward, done, info = env.step(action)
         new_state = np.subtract(env.board.snake.head, env.board.food)
 
-        # print(new_state)
-        # print(new_state, reward, done, info)
+        env.render(frame_speed=.0001)
+        # print("Snake:", env.board.snake.head)
 
         # Q(s,a):= Q(s,a) + lr [R(s,a) + gamma * max Q(s',a') - Q(s,a)]
-        try:
-            pass
-            Q[state[0], state[1], action] = Q[state[0], state[1], action] + alpha * (reward + gamma * np.max(Q[new_state[0], new_state[1]]) - Q[state[0], state[1], action]) 
-        except:
-            print("ERROR_Q_TABLE", action)
+        # try:
+        #     # Q[state[0], state[1], action] = Q[state[0], state[1], action] + alpha * (reward + gamma * np.max(Q[new_state[0], new_state[1]]) - Q[state[0], state[1], action]) 
+        #     pass
+        # except:
+        #     # print("ERROR_Q_TABLE", action)
+        #     pass
 
         cumulative_training_rewards += reward 
 
