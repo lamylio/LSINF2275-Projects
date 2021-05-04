@@ -13,6 +13,7 @@ class SnakeEnv():
 
         self.viewer = None
         self.fig = None
+        self.episode = 0
         # print('Init successful!', self.action_space.n, self.observation_space)
 
     def step(self, action):
@@ -20,24 +21,24 @@ class SnakeEnv():
         return self.board.step(action)
 
     def reset(self):
+        self.episode+=1
         self.board.reset()
         return self.board.snake.head
 
     def render(self, close=False, frame_speed=.1):
         if close and self.viewer is not None:
-            plt.close(self.fig)
             self.viewer.clear()
-            self.fig = None
             self.viewer = None
             return
 
         if self.viewer is None:
             plt.gcf().canvas.set_window_title('Snake')
-            plt.suptitle('Snake board')
             self.viewer= plt.subplot(111)
             self.viewer.xaxis.set_visible(False)
             self.viewer.yaxis.set_visible(False)
+            plt.ion()
         else:
             self.viewer.clear()
             self.viewer.imshow(self.board.display)
+            self.viewer.title.set_text('Snake board\nEpisode {}'.format(self.episode))
             plt.pause(frame_speed)

@@ -11,6 +11,7 @@ class Snake():
             self.body.append((self.head[0]+i, self.head[1]))
 
         self.old = None
+        self.previous = self.body[0]
         # print("Snake init", self.head, self.body)
 
     def step(self, action):
@@ -19,14 +20,19 @@ class Snake():
         
         previous = self.head
         next_head = np.add(self.head, m)
-        if self.is_equal(next_head, self.body[0]): return previous # cancel if eat himself instant
-        else: self.head = next_head
+        if self.is_equal(next_head, self.previous): 
+            self.has_moved = False # cancel if eat himself instant
+            return False
+        else: 
+            self.previous = previous
+            self.head = next_head
         
         for i,part in enumerate(self.body):
             self.body[i], previous = previous, part
             
         # print("M:", m, "Old:", self.old, "Head:", self.head)
-        return next_head
+        self.has_moved = True
+        return True
 
     def movement(self, action):
         if action == self.UP: return (-1,0)

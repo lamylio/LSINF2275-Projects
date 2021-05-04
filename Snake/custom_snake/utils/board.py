@@ -1,4 +1,4 @@
-from numpy import array, zeros, where, reshape
+from numpy import array, zeros, where, reshape, linalg
 from numpy.random import randint, choice
 from custom_snake.utils.snake import Snake
 
@@ -33,17 +33,17 @@ class Board():
         self.update_food()
 
     def step(self, action):
-        self.snake.step(action)
-        rewards = self.step_results()
-        if rewards > 0: 
+        moved = self.snake.step(action)
+        reward, reason = self.step_results()
+        if reason == "FOOD": 
             self.update_food()
             self.snake.body.append(self.snake.old)
         next_state = self.snake.head
-        done = rewards < 0 or self.win()
+        done = reason in ["WALL", "BODY"] or self.win()
         info = {"snake_length": len(self.snake.body)+1}
         
         self.update_snake()
-        return next_state, rewards, done, info
+        return next_state, reward, done, info
 
     def update_snake(self):
         if(self.off_board(self.snake.head)): return
@@ -61,8 +61,10 @@ class Board():
 
     def update_food(self):
         possible_x, possible_y = where(self.board[:,:] == self.BOARD_VALUES.get("EMPTY_SPACE"))
-        choice_x = choice(possible_x)
-        choice_y = choice(possible_y)
+        random_index = randint(len(possible_x))
+
+        choice_x = possible_x[random_index]
+        choice_y = possible_y[random_index]
 
         self.food = (choice_x, choice_y)
         self.update_board_and_display(choice_x, choice_y, "FOOD")
@@ -71,19 +73,22 @@ class Board():
     def step_results(self):
         # Snake is dead by walls
         if(self.off_board(self.snake.head)): 
-            return -1
+            return -10, "WALL"
+
+        # Has not moved
+        if not self.snake.has_moved: return -5, "STUCK"
 
         # Snake is dead by eating his body
         if(self.get_type(self.snake.head) == self.BOARD_VALUES.get("SNAKE_BODY")):
-            return -2
+            return -20, "BODY"
 
         # Food eaten
         if(self.get_type(self.snake.head) == self.BOARD_VALUES.get("FOOD")): 
-            return 10
+            return 10, "FOOD"
 
 
-        # None
-        return 0
+        # Reward for being close to food
+        return round(self.x - abs(linalg.norm(self.food-self.snake.head)))/10, "DISTANCE"
 
     def win(self):
         return len(self.snake.body) >= self.x + self.y - 1
@@ -106,7 +111,7 @@ class Board():
         return coordinates[0]<0 or coordinates[0]>=self.x or coordinates[1]<0 or coordinates[1]>=self.y
 
     def around_snake(self, radius):
-        arounds = []
+        arounds = list()
         center_x, center_y = self.snake.head
 
         low_x, low_y = center_x-radius, center_y-radius
@@ -115,6 +120,6 @@ class Board():
         for x in range(low_x, high_x+1):
             for y in range(low_y, high_y+1):
                 if(self.off_board((x, y))): arounds.append(self.BOARD_VALUES.get("WALL"))
-                else: arounds.append(self.board[x, y])
+                else: arounds.append(self.get_type((x,y)))
 
         return reshape(arounds, (2*radius+1, 2*radius+1)).astype(int)
