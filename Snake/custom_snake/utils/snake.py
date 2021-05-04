@@ -13,6 +13,8 @@ Has no logic and only executes the instructions, except for preventing the snake
 - head : int[x,y] : coordinates of the snake's head
 - body : list[int[x,y]] : list of coordinates for each body part of the snake
 - old : int[x,y] : the tail of the snake to be removed from the @Board#display after #step()
+- previous : int[x,y] : coordinates of the first body part
+- has_moved : bool : has the snake moved after #step() ? 
 
 @constants
 - MOVEMENTS : dict : map the [x,y] coordinates change for each action
@@ -38,6 +40,8 @@ class Snake():
             self.body.append((self.head[0]+i, self.head[1]))
 
         self.old = None
+        self.previous = self.body[0]
+        self.has_moved = False
 
     def step(self, action):
         m = self.MOVEMENTS.get(action, (0,0))
@@ -45,13 +49,18 @@ class Snake():
         
         previous = self.head
         next_head = np.add(self.head, m)
-        if self.is_equal(next_head, self.body[0]): return previous # cancel if eat himself instant
-        else: self.head = next_head
+        if self.is_equal(next_head, self.previous): # cancel if eat himself instant
+            self.has_moved = False 
+            return False
+        else: 
+            self.previous = previous
+            self.head = next_head
         
         for i,part in enumerate(self.body):
             self.body[i], previous = previous, part
-            
-        return next_head
+
+        self.has_moved = True
+        return True
 
     def is_equal(self, coordinates_1, coordinates_2):
         for i in range(len(coordinates_1)):

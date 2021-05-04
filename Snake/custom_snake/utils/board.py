@@ -28,13 +28,13 @@ Accesses and controls the @Snake component. Assume the matrixes start at [0,0], 
 - step(action) : tuple : move the @Snake, compute the reward and returns to @SnakeEnv
 - update_snake() : None : update the #board and #display with current @Snake#head coordinates.
 - update_food(): None : random choose an empty space and update #board and #display.
-- step_results() : int : compute the score/reward of the new @Snake#head coordinates.
+- step_results() : tuple(int,string) : compute the score/reward of the new @Snake#head coordinates.
 - update_board_and_display(x, y, game_element) : None : update #board and #display at [x,y] indexes with matched value of #game_element 
 - get_color(coordinates) : #BOARD_COLORS : returns the #display value at index [coordinates]
 - get_type(coordinates) : #BOARD_VALUES :  returns the #board value at index [coordinates]
 - off_board(coordinates) : bool : returns true if the @Snake#head is outside of the #board
 - around_snake(radius) : np.array[(2*radius+1, 2*radius+1)] : returns an array with #BOARD_VALUES around the @Snake#head
-- win() : bool : is the game won ? 
+- game_won() : bool : is the game won ? 
 
 """
 class Board():
@@ -71,16 +71,18 @@ class Board():
 
     def step(self, action):
         self.snake.step(action)
-        rewards = self.step_results()
-        if rewards > 0: 
+
+        reward, reason = self.step_results()
+        if reason == "FOOD": 
             self.update_food()
             self.snake.body.append(self.snake.old)
+
         next_state = self.snake.head
-        done = rewards < 0 or self.win()
+        done = reason in ["WALL", "BODY"] or self.game_won()
         info = {"snake_length": len(self.snake.body)+1}
         
         self.update_snake()
-        return next_state, rewards, done, info
+        return next_state, reward, done, info
 
     def update_snake(self):
         if(self.off_board(self.snake.head)): return
@@ -108,20 +110,22 @@ class Board():
     def step_results(self):
         # Snake is dead by walls
         if(self.off_board(self.snake.head)): 
-            return -1
+            return -1, "WALL"
+
+        # Has not moved (reversed on himself)
+        if not self.snake.has_moved: return -1, "STUCK"
 
         # Snake is dead by eating his body
         if(self.get_type(self.snake.head) == self.BOARD_VALUES.get("SNAKE_BODY")):
-            return -2
+            return -1, "BODY"
 
         # Food eaten
         if(self.get_type(self.snake.head) == self.BOARD_VALUES.get("FOOD")): 
-            return 10
+            return 2, "FOOD"
 
-        # None
-        return 0
+        return 0, "NONE"
 
-    def win(self):
+    def game_won(self):
         return len(self.snake.body) >= self.x + self.y - 1
 
     def update_board_and_display(self, x, y, game_element):
