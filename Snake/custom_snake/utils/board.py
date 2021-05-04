@@ -1,7 +1,42 @@
 from numpy import array, zeros, where, reshape
 from numpy.random import randint, choice
-from custom_snake.utils.snake import Snake
 
+from custom_snake.utils.snake import Snake
+""" 
+@Board
+- board_size=(20,20) : vector of length 2 indicating the [x,y] dimension of the board
+
+@description
+Corresponds to the game board and manages the logic allowing the game to function. 
+Accesses and controls the @Snake component. Assume the matrixes start at [0,0], top left corner.
+
+@constants
+- BOARD_VALUES : dictionary representing each game element by an id. (for #board)
+- BOARD_COLORS : dictionary representing each game element by an RGB array. (for #display)
+
+@properties 
+- board_size : [height, width] of the #board (and #display)
+- x : height of the #board_size
+- y : width of the #board_size
+- board : matrix representing the game with #BOARD_VALUES
+- display : matrix representing the game with #BOARD_COLORS
+- snake : @Snake instance
+- food : coordinates [x,y] of the food
+
+@methods
+- reset() : None : reset the game, instanciate a new @Snake and generate new food.
+- step(action) : tuple : move the @Snake, compute the reward and returns to @SnakeEnv
+- update_snake() : None : update the #board and #display with current @Snake#head coordinates.
+- update_food(): None : random choose an empty space and update #board and #display.
+- step_results() : int : compute the score/reward of the new @Snake#head coordinates.
+- update_board_and_display(x, y, game_element) : None : update #board and #display at [x,y] indexes with matched value of #game_element 
+- get_color(coordinates) : #BOARD_COLORS : returns the #display value at index [coordinates]
+- get_type(coordinates) : #BOARD_VALUES :  returns the #board value at index [coordinates]
+- off_board(coordinates) : bool : returns true if the @Snake#head is outside of the #board
+- around_snake(radius) : np.array[(2*radius+1, 2*radius+1)] : returns an array with #BOARD_VALUES around the @Snake#head
+- win() : bool : is the game won ? 
+
+"""
 class Board():
 
     BOARD_VALUES = {
@@ -21,8 +56,10 @@ class Board():
 
     def __init__(self, board_size):
         self.board_size = board_size
-
         self.x, self.y = board_size
+        self.snake = None
+        self.food = None
+        self.board = None
         self.display = zeros((self.x, self.y, 3), dtype="uint8")
 
     def reset(self):
@@ -61,9 +98,9 @@ class Board():
 
     def update_food(self):
         possible_x, possible_y = where(self.board[:,:] == self.BOARD_VALUES.get("EMPTY_SPACE"))
-        choice_x = choice(possible_x)
-        choice_y = choice(possible_y)
-
+        random_index = randint(len(possible_x))
+        choice_x = possible_x[random_index]
+        choice_y = possible_y[random_index]
         self.food = (choice_x, choice_y)
         self.update_board_and_display(choice_x, choice_y, "FOOD")
 
@@ -81,18 +118,15 @@ class Board():
         if(self.get_type(self.snake.head) == self.BOARD_VALUES.get("FOOD")): 
             return 10
 
-
         # None
         return 0
 
     def win(self):
         return len(self.snake.body) >= self.x + self.y - 1
 
-    # ----------------
-
-    def update_board_and_display(self, x, y, dict_get):
-        self.board[x, y] = self.BOARD_VALUES.get(dict_get)
-        self.display[x, y] = self.BOARD_COLORS.get(dict_get)
+    def update_board_and_display(self, x, y, game_element):
+        self.board[x, y] = self.BOARD_VALUES.get(game_element)
+        self.display[x, y] = self.BOARD_COLORS.get(game_element)
 
     def get_color(self, coordinates):
         x, y = coordinates

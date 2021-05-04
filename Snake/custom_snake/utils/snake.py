@@ -1,8 +1,35 @@
 import numpy as np
 
+""" 
+@Snake
+- head_coordinates=(0,0) : [x,y] coordinates of the head at spawn
+- length=3 : the length of the snake at spawn
+
+@description
+Class that stores and manages the coordinates of each part (head and body) of the snake component. 
+Has no logic and only executes the instructions, except for preventing the snake to turn back on itself. 
+
+@properties
+- head : int[x,y] : coordinates of the snake's head
+- body : list[int[x,y]] : list of coordinates for each body part of the snake
+- old : int[x,y] : the tail of the snake to be removed from the @Board#display after #step()
+
+@constants
+- MOVEMENTS : dict : map the [x,y] coordinates change for each action
+
+@methods
+- step(action) : int[x,y] : move the #head then each piece of #body by #MOVEMENTS[action]. 
+- is_equal(coordinates_1, coordinates_2) : bool : compares two [x,y] coordinates
+
+"""
 class Snake():
 
-    UP, RIGHT, DOWN, LEFT = range(4)
+    MOVEMENTS = {
+        0: (-1,0), # UP
+        1: (0,1),  # RIGHT
+        2: (1,0),  # DOWN
+        3: (0,-1), # LEFT
+    }
 
     def __init__(self, head_coordinates=(0,0), length=3):
         self.head = head_coordinates
@@ -11,10 +38,9 @@ class Snake():
             self.body.append((self.head[0]+i, self.head[1]))
 
         self.old = None
-        # print("Snake init", self.head, self.body)
 
     def step(self, action):
-        m = self.movement(action)
+        m = self.MOVEMENTS.get(action, (0,0))
         self.old = self.body[-1]
         
         previous = self.head
@@ -25,15 +51,7 @@ class Snake():
         for i,part in enumerate(self.body):
             self.body[i], previous = previous, part
             
-        # print("M:", m, "Old:", self.old, "Head:", self.head)
         return next_head
-
-    def movement(self, action):
-        if action == self.UP: return (-1,0)
-        elif action == self.RIGHT: return (0,1)
-        elif action == self.DOWN: return (1, 0)
-        elif action == self.LEFT: return (0,-1)
-        else: return (0,0)
 
     def is_equal(self, coordinates_1, coordinates_2):
         for i in range(len(coordinates_1)):
