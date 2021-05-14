@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
-from numpy import reshape, zeros
+from numpy import reshape, zeros, arange
 
 from custom_snake.utils.board import Board
 
@@ -54,41 +54,57 @@ class SnakeEnv():
 
     """ Render the current board state via a matplotlib figure """
     def render(self, epsilon=0, lookup=1, frame_speed: float = .1 ):
-
+        lookup_size = 2*lookup+1
         if self.viewer is None:
-            plt.gcf().canvas.set_window_title('Snake')
+            
+            self.figure = plt.figure(num="Snake test", figsize=(8,6))
 
             spec = gridspec.GridSpec(1,2, width_ratios= [2,1])
             spec_sub = gridspec.GridSpecFromSubplotSpec(3,1, subplot_spec=spec[1])
 
-            self.viewer = plt.subplot(spec[0])
-            self.viewer_info = plt.subplot(spec_sub[0])
-            self.viewer_lookup = plt.subplot(spec_sub[1])
-            self.viewer_apple = plt.subplot(spec_sub[2])
+            self.viewer = self.figure.add_subplot(spec[0])
+            self.viewer_info = self.figure.add_subplot(spec_sub[0])
+            self.viewer_lookup = self.figure.add_subplot(spec_sub[1])
+            self.viewer_food = self.figure.add_subplot(spec_sub[2])
 
+            # Sub-titles
             self.viewer.set_title('Snake board')
             self.viewer_lookup.set_title('Snake vision')
-            self.viewer_apple.set_title('Food position')
+            self.viewer_food.set_title('Food position')
 
-            self.viewer.xaxis.set_visible(False)
-            self.viewer.yaxis.set_visible(False)
+            # Better display of snake board
+            self.viewer.grid()
+            self.viewer.set_xticks(arange(0,self.board_size[0],1))
+            self.viewer.set_yticks(arange(0,self.board_size[1],1))
+            self.viewer.set_xticklabels([])
+            self.viewer.set_yticklabels([])
 
+            # Remove the axes of the informations viewer
             self.viewer_info.xaxis.set_visible(False)
             self.viewer_info.yaxis.set_visible(False)
 
-            self.viewer_apple.xaxis.set_visible(False)
-            self.viewer_apple.yaxis.set_visible(False)
+            # Better display of snake vision
+            self.viewer_lookup.grid()
+            self.viewer_lookup.set_xticks(arange(0,lookup_size,1))
+            self.viewer_lookup.set_yticks(arange(0,lookup_size,1))
+            self.viewer_lookup.set_xticklabels([])
+            self.viewer_lookup.set_yticklabels([])
 
-            self.viewer_lookup.xaxis.set_visible(False)
-            self.viewer_lookup.yaxis.set_visible(False)
+            # Better display of food position
+            self.viewer_food.grid()
+            self.viewer_food.set_xticks(arange(0,3,1))
+            self.viewer_food.set_yticks(arange(0,3,1))
+            self.viewer_food.set_xticklabels([])
+            self.viewer_food.set_yticklabels([])
+
         else:
             self.viewer.clear()
             self.viewer_info.clear()
             self.viewer_lookup.clear()
-            self.viewer_apple.clear()
+            self.viewer_food.clear()
         
         # Snake board
-        self.viewer.imshow(self.board.display)
+        self.viewer.imshow(self.board.display, extent=[-0.01,self.board_size[0],0,self.board_size[1]])
         
         # display length
         self.viewer_info.text(0.1, 0.7, 'Score: ' + str(len(self.board.snake.body) + 1))
@@ -101,8 +117,9 @@ class SnakeEnv():
         state = self.board.get_finite_state(lookup)
         # display around snake
         colors_map = list(self.board.BOARD_COLORS.values())
-        around = reshape([colors_map[self.board.BOARD_VALUES.get("WALL")] if e == self.board.BOARD_VALUES.get("SNAKE_BODY") else colors_map[e] for e in state[:-2]], (2*lookup+1,2*lookup+1,3)).astype("uint8")
-        self.viewer_lookup.imshow(around)
+        around = reshape([colors_map[self.board.BOARD_VALUES.get("WALL")] if e == self.board.BOARD_VALUES.get("SNAKE_BODY") 
+        else colors_map[e] for e in state[:-2]], (lookup_size,lookup_size,3)).astype("uint8")
+        self.viewer_lookup.imshow(around, extent =[0, lookup_size, 0, lookup_size])
         
         # Apple
         ax, ay = state[-2:]
@@ -112,5 +129,5 @@ class SnakeEnv():
         food[1,1] = self.board.BOARD_COLORS.get("SNAKE_HEAD")
         food[1-ax, 1-ay] = self.board.BOARD_COLORS.get("FOOD")
 
-        self.viewer_apple.imshow(food)
+        self.viewer_food.imshow(food, extent=[0, 3, 0,3])
         plt.pause(frame_speed)

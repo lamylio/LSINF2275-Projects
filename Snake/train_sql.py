@@ -11,7 +11,7 @@ from utils_sql import *
 # ====================================================================
 
 PARAMS = {
-    'LOOKUP': 2,
+    'LOOKUP': 1,
 
     'BOARD_SIZE': [8,8],
     'SNAKE_START_LENGTH': 3,
@@ -22,7 +22,7 @@ PARAMS = {
     
     'ALPHA': 1,
     'GAMMA': 1,
-    'EPSILON': 0.8,
+    'EPSILON': 1,
 }
 
 RESULTS = {
@@ -47,7 +47,7 @@ if __name__=='__main__':
         for episode in BAR:
 
             snake_pos = ENV.reset()
-            state = ENV.board.get_finite_state(ENV.board.get_around(snake_pos,PARAMS.get("LOOKUP")), snake_pos, ENV.board.food)
+            state = ''.join(str(ENV.board.get_finite_state(PARAMS.get("LOOKUP"))))
 
             for step in range(PARAMS.get("MAX_STEPS", 1000)):
 
@@ -58,7 +58,7 @@ if __name__=='__main__':
                 else: action = random.choice(ENV.action_space)  
 
                 snake_pos, reward, done, info = ENV.step(action)
-                new_state = ENV.board.get_finite_state(ENV.board.get_around(snake_pos,PARAMS.get("LOOKUP")), snake_pos, ENV.board.food)
+                new_state = ''.join(str(ENV.board.get_finite_state(PARAMS.get("LOOKUP"))))
                 if PARAMS["RENDER_SPEED"] > 0 or episode >= PARAMS["EPISODES"]-10: ENV.render(frame_speed=PARAMS.get('RENDER_SPEED', 0.5)+0.01)
 
 
@@ -68,7 +68,7 @@ if __name__=='__main__':
                 bellman_left = q_values[action] + PARAMS.get("ALPHA") * bellman_right
                 update_value_from_state_and_action(CUR, TABLE, state, action, bellman_left) # push to db
 
-                info.update({'max_score': RESULTS["MAX_SCORE"], 'epsilon': round(PARAMS["EPSILON"], 4), 'steps': step, 'state': state})
+                info.update({'max_score': RESULTS["MAX_SCORE"], 'epsilon': round(PARAMS["EPSILON"], 4), 'steps': step})
                 up, right, down, left = map(round, q_values)
                 BAR.set_postfix_str(f"↑ {up} | → {right} | ↓ {down} | ← {left}")
                 BAR.set_description_str(str(info))
