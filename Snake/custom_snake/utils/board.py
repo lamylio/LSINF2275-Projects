@@ -1,5 +1,6 @@
-from numpy import array, zeros, where, reshape
-from numpy.random import randint, choice
+
+from numpy.random import randint
+import numpy as np
 
 from custom_snake.utils.snake import Snake
 """ 
@@ -28,12 +29,12 @@ Accesses and controls the @Snake component. Assume the matrixes start at [0,0], 
 - step(action) : tuple : move the @Snake, compute the reward and returns to @SnakeEnv
 - update_snake() : None : update the #board and #display with current @Snake#head coordinates.
 - update_food(): None : random choose an empty space and update #board and #display.
-- step_results() : tuple(int,string) : compute the score/reward of the new @Snake#head coordinates.
+- step_results() : tuple(int,string) : compute the score/reward of the new @Snake#head coordinates. Also gives a reason.
 - update_board_and_display(x, y, game_element) : None : update #board and #display at [x,y] indexes with matched value of #game_element 
 - get_color(coordinates) : #BOARD_COLORS : returns the #display value at index [coordinates]
 - get_type(coordinates) : #BOARD_VALUES :  returns the #board value at index [coordinates]
 - off_board(coordinates) : bool : returns true if the @Snake#head is outside of the #board
-- around_snake(radius) : np.array[(2*radius+1, 2*radius+1)] : returns an array with #BOARD_VALUES around the @Snake#head
+- get_around(coordinates, radius) : np.array[(2*radius+1, 2*radius+1)] : returns an array with #BOARD_VALUES around the coordinates
 - game_won() : bool : is the game won ? 
 
 """
@@ -48,24 +49,25 @@ class Board():
     }
 
     BOARD_COLORS = {
-        "EMPTY_SPACE": array([255, 255, 255], dtype="uint8"),
-        "SNAKE_BODY": array([102, 204, 0], dtype="uint8"),
-        "SNAKE_HEAD": array([103, 153, 0], dtype="uint8"),
-        "FOOD": array([204, 51, 0], dtype="uint8")
+        "EMPTY_SPACE": np.array([255, 255, 255], dtype="uint8"),
+        "SNAKE_BODY": np.array([102, 204, 0], dtype="uint8"),
+        "SNAKE_HEAD": np.array([103, 153, 0], dtype="uint8"),
+        "FOOD": np.array([204, 51, 0], dtype="uint8")
     }
 
-    def __init__(self, board_size):
+    def __init__(self, board_size, snake_start_length):
         self.board_size = board_size
         self.x, self.y = board_size
         self.snake = None
         self.food = None
         self.board = None
-        self.display = zeros((self.x, self.y, 3), dtype="uint8")
+        self.display = np.zeros((self.x, self.y, 3), dtype="uint8")
+        self.snake_start_length = snake_start_length
 
     def reset(self):
-        self.board = zeros(self.board_size)
+        self.board = np.zeros(self.board_size)
         self.display[:,:,:] = self.BOARD_COLORS.get("EMPTY_SPACE")
-        self.snake = Snake((randint(self.x-3), randint(self.y-1)))
+        self.snake = Snake((randint(self.x-self.snake_start_length), randint(self.y-1)), self.snake_start_length)
         self.update_snake()
         self.update_food()
 
@@ -78,8 +80,8 @@ class Board():
             self.snake.body.append(self.snake.old)
 
         next_state = self.snake.head
-        done = reason in ["WALL", "BODY"] or self.game_won()
-        info = {"snake_length": len(self.snake.body)+1}
+        done = reason in ["WALL", "BODY"] or self.game_won() or self.snake.blocked > 10
+        info = {"reward_type": reason, "snake_length": len(self.snake.body)+1}
         
         self.update_snake()
         return next_state, reward, done, info
@@ -99,7 +101,7 @@ class Board():
 
 
     def update_food(self):
-        possible_x, possible_y = where(self.board[:,:] == self.BOARD_VALUES.get("EMPTY_SPACE"))
+        possible_x, possible_y = np.where(self.board[:,:] == self.BOARD_VALUES.get("EMPTY_SPACE"))
         random_index = randint(len(possible_x))
         choice_x = possible_x[random_index]
         choice_y = possible_y[random_index]
@@ -108,22 +110,27 @@ class Board():
 
 
     def step_results(self):
-        # Snake is dead by walls
-        if(self.off_board(self.snake.head)): 
-            return -1, "WALL"
+        # Snake is dead by wall
+        if(self.off_board(self.snake.head) or self.get_type(self.snake.head) == self.BOARD_VALUES.get("WALL")): 
+            return -5, "WALL"
 
         # Has not moved (reversed on himself)
-        if not self.snake.has_moved: return -1, "STUCK"
+        if not self.snake.has_moved: return -5, "STUCK"
 
         # Snake is dead by eating his body
         if(self.get_type(self.snake.head) == self.BOARD_VALUES.get("SNAKE_BODY")):
-            return -1, "BODY"
+            return -6, "BODY"
 
         # Food eaten
         if(self.get_type(self.snake.head) == self.BOARD_VALUES.get("FOOD")): 
-            return 2, "FOOD"
+            return 10, "FOOD"
 
-        return 0, "NONE"
+        distance = abs(np.linalg.norm(np.subtract(self.snake.head, self.food)))
+        distance_previous = abs(np.linalg.norm(np.subtract(self.snake.previous, self.food)))
+        
+        if distance < distance_previous: return 1, "CLOSER"
+
+        return -1.5, "NONE"
 
     def game_won(self):
         return len(self.snake.body) >= self.x + self.y - 1
@@ -143,16 +150,26 @@ class Board():
     def off_board(self, coordinates):
         return coordinates[0]<0 or coordinates[0]>=self.x or coordinates[1]<0 or coordinates[1]>=self.y
 
-    def around_snake(self, radius):
+    def get_around(self, coordinates, radius):
         arounds = []
-        center_x, center_y = self.snake.head
+        center_x, center_y = coordinates
 
         low_x, low_y = center_x-radius, center_y-radius
         high_x, high_y = center_x+radius, center_y+radius
 
         for x in range(low_x, high_x+1):
             for y in range(low_y, high_y+1):
-                if(self.off_board((x, y))): arounds.append(self.BOARD_VALUES.get("WALL"))
+                if(self.off_board((x, y))): arounds.append(self.BOARD_VALUES.get("SNAKE_BODY"))
                 else: arounds.append(self.board[x, y])
 
-        return reshape(arounds, (2*radius+1, 2*radius+1)).astype(int)
+        return np.array(arounds).astype(int)
+
+    def get_finite_state(around, snake_pos, food_pos):
+        state = ''.join(map(str, around))
+
+        # state = around.flatten()
+        sx, sy = snake_pos
+        fx, fy = food_pos
+
+        state = f"{state}{int(sx-fx > 0)}{int(sy-fy > 0)}"
+        return state

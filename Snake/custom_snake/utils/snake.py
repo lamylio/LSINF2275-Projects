@@ -1,4 +1,4 @@
-import numpy as np
+from numpy import add
 
 """ 
 @Snake
@@ -33,28 +33,30 @@ class Snake():
         3: (0,-1), # LEFT
     }
 
-    def __init__(self, head_coordinates=(0,0), length=3):
+    def __init__(self, head_coordinates=(0,0), snake_start_length=3):
         self.head = head_coordinates
         self.body = list()
-        for i in range(1, length):
-            self.body.append((self.head[0]+i, self.head[1]))
+        for i in range(1, snake_start_length):
+            self.body.append([self.head[0]+i, self.head[1]])
 
         self.old = None
         self.previous = self.body[0]
         self.has_moved = False
+        self.blocked = 0
 
     def step(self, action):
         m = self.MOVEMENTS.get(action, (0,0))
         self.old = self.body[-1]
         
         previous = self.head
-        next_head = np.add(self.head, m)
+        next_head = add(self.head, m)
         if self.is_equal(next_head, self.previous): # cancel if eat himself instant
             self.has_moved = False 
+            self.blocked += 1
             return False
         else: 
-            self.previous = previous
-            self.head = next_head
+            self.blocked = 0
+            self.previous, self.head = previous, next_head
         
         for i,part in enumerate(self.body):
             self.body[i], previous = previous, part
