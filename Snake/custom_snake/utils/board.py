@@ -49,10 +49,11 @@ class Board():
     }
 
     BOARD_COLORS = {
-        "EMPTY_SPACE": np.array([255, 255, 255], dtype="uint8"),
-        "SNAKE_BODY": np.array([102, 204, 0], dtype="uint8"),
-        "SNAKE_HEAD": np.array([103, 153, 0], dtype="uint8"),
-        "FOOD": np.array([204, 51, 0], dtype="uint8")
+        "EMPTY_SPACE": [255, 255, 255],
+        "SNAKE_BODY": [102, 204, 0],
+        "SNAKE_HEAD": [103, 153, 0],
+        "FOOD": [204, 51, 0],
+        "WALL": [123,78,63]
     }
 
     def __init__(self, board_size, snake_start_length):
