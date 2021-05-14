@@ -164,12 +164,23 @@ class Board():
 
         return np.array(arounds).astype(int)
 
-    def get_finite_state(around, snake_pos, food_pos):
-        state = ''.join(map(str, around))
+    def get_finite_state(self, radius=1):
+        around = self.get_around(self.snake.head, radius)
+        # state = ''.join(map(str, around))
 
-        # state = around.flatten()
-        sx, sy = snake_pos
-        fx, fy = food_pos
+        sx, sy = self.snake.head
+        fx, fy = self.food
 
-        state = f"{state}{int(sx-fx > 0)}{int(sy-fy > 0)}"
-        return state
+        # if snake on top of food, -1
+        dx = sx-fx
+        dy = sy-fy
+
+        rx, ry = 0, 0
+
+        if dx < 0 : rx = -1
+        elif dx > 0 : rx = 1
+
+        if dy < 0 : ry = -1
+        elif dy > 0: ry = 1
+
+        return [*around, rx, ry]
