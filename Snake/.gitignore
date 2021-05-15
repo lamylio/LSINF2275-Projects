@@ -1,10 +1,7 @@
 # Lioche custom directories and files
-
-resources/feather
-resources/json
-resources/sql
-
-sql/
 ppo/
+debug.ipynb
+train_deep.py
+model.py
 
 *.db-journal

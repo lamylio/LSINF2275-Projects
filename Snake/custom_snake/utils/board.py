@@ -81,6 +81,7 @@ class Board():
             self.snake.body.append(self.snake.old)
 
         next_state = self.snake.head
+        # Reset the game if dead. Except if stuck, punish 10 times then reset.
         done = reason in ["WALL", "BODY"] or self.game_won() or self.snake.blocked > 10
         info = {"reward_type": reason, "snake_length": len(self.snake.body)+1}
         
@@ -129,6 +130,7 @@ class Board():
         distance = abs(np.linalg.norm(np.subtract(self.snake.head, self.food)))
         distance_previous = abs(np.linalg.norm(np.subtract(self.snake.previous, self.food)))
         
+        # Snake is now closer to the food
         if distance < distance_previous: return 1, "CLOSER"
 
         return -1.5, "NONE"
@@ -167,20 +169,16 @@ class Board():
 
     def get_finite_state(self, radius=1):
         around = self.get_around(self.snake.head, radius)
-        # state = ''.join(map(str, around))
 
         sx, sy = self.snake.head
         fx, fy = self.food
 
-        # if snake on top of food, -1
-        dx = sx-fx
-        dy = sy-fy
-
         rx, ry = 0, 0
-
+        dx, dy = sx-fx, sy-fy
+        
         if dx < 0 : rx = -1
         elif dx > 0 : rx = 1
-
+        
         if dy < 0 : ry = -1
         elif dy > 0: ry = 1
 
