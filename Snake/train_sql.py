@@ -11,18 +11,18 @@ from utils_sql import *
 # ====================================================================
 
 PARAMS = {
-    'LOOKUP': 1,
+    'LOOKUP': 2,
 
-    'BOARD_SIZE': [8,8],
+    'BOARD_SIZE': [10,10],
     'SNAKE_START_LENGTH': 3,
-    'RENDER_SPEED': 0,
+    'RENDER_SPEED': 0.1,
 
-    'EPISODES': 10000,
-    'MAX_STEPS': 1000,
+    'EPISODES': 50000,
+    'MAX_STEPS': 5000,
     
-    'ALPHA': 1,
-    'GAMMA': 1,
-    'EPSILON': 1,
+    'ALPHA': 0.8,
+    'GAMMA': 0.9,
+    'EPSILON': 1.05,
 }
 
 RESULTS = {
@@ -47,7 +47,8 @@ if __name__=='__main__':
         for episode in BAR:
 
             snake_pos = ENV.reset()
-            state = ''.join(str(ENV.board.get_finite_state(PARAMS.get("LOOKUP"))))
+            finite_state = ENV.board.get_finite_state(PARAMS.get("LOOKUP"))
+            state = ''.join(str(finite_state))
 
             for step in range(PARAMS.get("MAX_STEPS", 1000)):
 
@@ -58,8 +59,10 @@ if __name__=='__main__':
                 else: action = random.choice(ENV.action_space)  
 
                 snake_pos, reward, done, info = ENV.step(action)
-                new_state = ''.join(str(ENV.board.get_finite_state(PARAMS.get("LOOKUP"))))
-                if PARAMS["RENDER_SPEED"] > 0 or episode >= PARAMS["EPISODES"]-10: ENV.render(frame_speed=PARAMS.get('RENDER_SPEED', 0.5)+0.01)
+                finite_state = ENV.board.get_finite_state(PARAMS.get("LOOKUP"))
+                new_state = ''.join(str(finite_state))
+                if PARAMS["RENDER_SPEED"] > 0 and episode >= PARAMS["EPISODES"]-3: ENV.render({"state":finite_state, "lookup":PARAMS["LOOKUP"]}, frame_speed=PARAMS.get('RENDER_SPEED', 0.1))
+
 
 
                 if not any(q_values): insert_new_state(CUR, TABLE, state)

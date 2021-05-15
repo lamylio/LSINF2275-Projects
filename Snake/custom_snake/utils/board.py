@@ -134,7 +134,7 @@ class Board():
         return -1.5, "NONE"
 
     def game_won(self):
-        return len(self.snake.body) >= self.x + self.y - 1
+        return len(self.snake.body) >= self.x * self.y - 1
 
     def update_board_and_display(self, x, y, game_element):
         self.board[x, y] = self.BOARD_VALUES.get(game_element)

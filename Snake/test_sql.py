@@ -15,8 +15,8 @@ PARAMS = {
     'BOARD_SIZE': [10,10],
     'SNAKE_START_LENGTH': 3,
 
-    'RENDER_SPEED': 0.05,
-    'MAX_STEPS': 1000
+    'RENDER_SPEED': 0.01,
+    'MAX_STEPS': 5000
 }
 
 RESULTS = {
@@ -41,9 +41,10 @@ if __name__=='__main__':
 
         while(has_won is False):
             snake_pos = ENV.reset()
-            state = ENV.board.get_finite_state(ENV.board.get_around(snake_pos,PARAMS.get("LOOKUP")), snake_pos, ENV.board.food)
+            finite_state = ENV.board.get_finite_state(PARAMS.get("LOOKUP"))
+            state = ''.join(str(finite_state))
 
-            for _ in range(PARAMS.get("MAX_STEPS", 1000)):
+            for step in range(PARAMS.get("MAX_STEPS", 5000)):
 
                 q_values = get_values_from_state(CUR, TABLE, state)
                 up, right, down, left = map(round, q_values)
@@ -53,15 +54,18 @@ if __name__=='__main__':
                     print("\nstate not found in Q - random action :", action)
 
                 BAR.set_description_str(f"↑ {up} | → {right} | ↓ {down} | ← {left} || action : {action}")
-                ENV.render(frame_speed=PARAMS.get('RENDER_SPEED', 0.5))
+                ENV.render({"state":finite_state, "lookup":PARAMS["LOOKUP"]}, frame_speed=PARAMS.get('RENDER_SPEED', 0.1))
                 snake_pos, reward, done, info = ENV.step(action)
 
-                state = ENV.board.get_finite_state(ENV.board.get_around(snake_pos,PARAMS.get("LOOKUP")), snake_pos, ENV.board.food) # update state
+                finite_state = ENV.board.get_finite_state(PARAMS.get("LOOKUP"))
+                state = ''.join(str(finite_state))
 
                 if done == True:
                     RESULTS.update({"MAX_SCORE": max(RESULTS.get("MAX_SCORE",3), info.get('snake_length'))})
-
-                    if ENV.board.game_won(): has_won = True
+                    print(RESULTS)
+                    if ENV.board.game_won(): 
+                        has_won = True
+                        print("WON !!!")
                     BAR.update()
                     break
 
