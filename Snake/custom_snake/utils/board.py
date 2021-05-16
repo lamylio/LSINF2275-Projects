@@ -66,6 +66,7 @@ class Board():
         self.snake_start_length = snake_start_length
 
     def reset(self):
+        #set all elements of the array to zero
         self.board = np.zeros(self.board_size)
         self.display[:,:,:] = self.BOARD_COLORS.get("EMPTY_SPACE")
         self.snake = Snake((randint(self.x-self.snake_start_length), randint(self.y-1)), self.snake_start_length)
@@ -88,7 +89,7 @@ class Board():
         self.update_snake()
         return next_state, reward, done, info
 
-    def update_snake(self):
+    def update_snake(self): #update the position of the snake
         if(self.off_board(self.snake.head)): return
         
         head_x, head_y = self.snake.head
@@ -103,8 +104,10 @@ class Board():
 
 
     def update_food(self):
+        #check where the board is empty
         possible_x, possible_y = np.where(self.board[:,:] == self.BOARD_VALUES.get("EMPTY_SPACE"))
         random_index = randint(len(possible_x))
+        #choice of the random place for the food
         choice_x = possible_x[random_index]
         choice_y = possible_y[random_index]
         self.food = (choice_x, choice_y)
@@ -137,6 +140,7 @@ class Board():
         return -1.5, "NONE"
 
     def game_won(self):
+        #check if the snake has the length of the board
         return len(self.snake.body) >= self.x * self.y - 1
 
     def update_board_and_display(self, x, y, game_element):
@@ -152,6 +156,7 @@ class Board():
         return self.board[x, y]
 
     def off_board(self, coordinates):
+        #checks if coordinates are off board
         return coordinates[0]<0 or coordinates[0]>=self.x or coordinates[1]<0 or coordinates[1]>=self.y
 
     def get_around(self, coordinates, radius):
@@ -161,6 +166,7 @@ class Board():
         low_x, low_y = center_x-radius, center_y-radius
         high_x, high_y = center_x+radius, center_y+radius
 
+        #check all around the center on a given radius
         for x in range(low_x, high_x+1):
             for y in range(low_y, high_y+1):
                 if(self.off_board((x, y))): arounds.append(self.BOARD_VALUES.get("SNAKE_BODY"))
@@ -169,8 +175,10 @@ class Board():
         return np.array(arounds).astype(int)
 
     def get_finite_state(self, radius=1):
+        #takes all elements around the head
         around = self.get_around(self.snake.head, radius)
 
+        #calculate the relative position of the food
         sx, sy = self.snake.head
         fx, fy = self.food
 
