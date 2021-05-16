@@ -15,7 +15,7 @@ PARAMS = {
     'BOARD_SIZE': [10,10],
     'SNAKE_START_LENGTH': 3,
 
-    'RENDER_SPEED': 5,
+    'RENDER_SPEED': 0.001,
     'MAX_STEPS': 1000,
     'EPISODES': 1000,
 
@@ -34,17 +34,19 @@ DB_PATH = "./resources/sql/q-values-alpha.db"
 if __name__=='__main__':
     
     try:
+        # Connect to the database
         DB = sqlite3.connect(DB_PATH)
         CUR = DB.cursor()
 
+        # Ensure the table exists, if not, create it
         create_table_if_not_exists(CUR, TABLE)
         print("TABLE", TABLE, "LOADED AND CONTAINS", get_table_length(CUR, TABLE), "ROWS!")
 
+        # Define the environment and the progress bar
         ENV = SnakeEnv(PARAMS.get("BOARD_SIZE", [20,20]), PARAMS.get("SNAKE_START_LENGTH", 3))
-
         BAR = tqdm(range(1, PARAMS.get("EPISODES", 10000)+1))
-        has_won = False
 
+        # Main loop
         for episode in BAR:
             snake_pos = ENV.reset()
             finite_state = ENV.board.get_finite_state(PARAMS.get("LOOKUP"))

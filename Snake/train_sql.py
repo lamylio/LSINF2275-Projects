@@ -12,6 +12,7 @@ from utils_sql import *
 
 # ====================================================================
 
+# Plot of the training process if PLOT_TRAINING = True
 def plot(scores, mean_scores, epsilons) :
     plt.clf()
     plt.title('Training...')
@@ -35,7 +36,7 @@ def plot(scores, mean_scores, epsilons) :
 # ====================================================================
 
 PARAMS = {
-    'LOOKUP': 2,
+    'VISION': 1,
 
     'BOARD_SIZE': [10,10],
     'SNAKE_START_LENGTH': 3,
@@ -61,7 +62,7 @@ RESULTS = {
     'EPSILONS': []
 }
 
-TABLE = "LOOKUP_{}".format(PARAMS.get('LOOKUP'))
+TABLE = "LOOKUP_{}".format(PARAMS.get('VISION'))
 DB_PATH = "./resources/sql/q-values-alpha-smooth-30.db"
 
 # ====================================================================
@@ -81,23 +82,29 @@ def update_epsilon(epsilon, episode):
 if __name__=='__main__':
     
     try:
+        # Connect to the database
         DB = sqlite3.connect(DB_PATH)
         CUR = DB.cursor()
-        create_table_if_not_exists(CUR, TABLE)
 
+        # Ensure the table exists, if not, create it
+        create_table_if_not_exists(CUR, TABLE)
         print("TABLE", TABLE, "WAS LOADED AND CONTAINS", get_table_length(CUR, TABLE), "ROWS!")
 
+        # Define the environment and the progress bar
         ENV = SnakeEnv(PARAMS.get("BOARD_SIZE"), PARAMS.get("SNAKE_START_LENGTH"))
         BAR = tqdm(range(1, PARAMS.get("EPISODES", 10000)+1))
 
         epsilon = PARAMS.get("EPSILON", 1)
-
+        # Main loop
         for episode in BAR:
-
+            
+            # Reset the environment when game is done
             snake_pos = ENV.reset()
-            finite_state = ENV.board.get_finite_state(PARAMS.get("LOOKUP", 1))
+            # Retrieve the finite state
+            finite_state = ENV.board.get_finite_state(PARAMS.get("VISION", 1))
             state = ''.join(str(finite_state))
 
+            # Play the current game
             for step in range(PARAMS.get("MAX_STEPS", 1000)):
                 
                 # Retrieve the qvalues and the alpha for the state
@@ -113,30 +120,39 @@ if __name__=='__main__':
                 snake_pos, reward, done, info = ENV.step(action)
 
                 # Get the new state for Q(s')
-                finite_state = ENV.board.get_finite_state(PARAMS.get("LOOKUP",1))
+                finite_state = ENV.board.get_finite_state(PARAMS.get("VISION",1))
                 new_state = ''.join(str(finite_state))
 
                 # Bellman | Q(s,a):= Q(s,a) + alpha * [R(s,a) + gamma * max Q(s') - Q(s,a)]
                 bellman_right = reward + PARAMS.get("GAMMA", 1) * np.max(get_values_from_state(CUR, TABLE, new_state)[:4]) - q_values[action]
                 bellman_left = q_values[action] + alpha * bellman_right
 
+                # Update alpha
                 new_alpha = round(max(PARAMS.get("MIN_ALPHA", .05), alpha-PARAMS.get("ALPHA_DECREASE", .05)), 2)
+                
+                # Save changes to database
                 update_value_from_state(CUR, TABLE, state, action, bellman_left) # q-value change
                 update_value_from_state(CUR, TABLE, state, "alpha", new_alpha) # alpha change
 
                 # Progress bar informations display
-                info.update({'max_score': RESULTS["MAX_SCORE"], 'epsilon': round(epsilon, 4), 'steps': step, 'state_alpha': alpha})
+                info.update(
+                    {'max_score': RESULTS["MAX_SCORE"], 
+                    'epsilon': round(epsilon, 4), 
+                    'steps': step, 
+                    'state_alpha': alpha}
+                )
                 BAR.set_description_str(str(info))
-                
                 up, right, down, left = map(round, q_values)
                 BAR.set_postfix_str(f"↑ {up} | → {right} | ↓ {down} | ← {left}")
 
                 # Update the state
                 state = new_state
 
-                # Update epsilon and max score
+                # Update epsilon when game is over
                 if done:
                     epsilon = update_epsilon(epsilon, episode)
+
+                    # Update the score
                     score = info.get('snake_length')-3
                     RESULTS["MAX_SCORE"] = max(RESULTS["MAX_SCORE"], info.get('snake_length'))
 
@@ -144,7 +160,8 @@ if __name__=='__main__':
                     RESULTS["SCORES"].append(score)
                     RESULTS["SCORE_MEANS"].append(np.mean(RESULTS["SCORES"][max(0, episode-100):]))
                     RESULTS["EPSILONS"].append(epsilon)
-                    if PARAMS.get("PLOT_TRAINING", False): plot(RESULTS["SCORES"], RESULTS["SCORE_MEANS"], RESULTS["EPSILONS"])
+                    if PARAMS.get("PLOT_TRAINING", False): 
+                        plot(RESULTS["SCORES"], RESULTS["SCORE_MEANS"], RESULTS["EPSILONS"])
                     break
 
             # Save every x steps
@@ -153,12 +170,12 @@ if __name__=='__main__':
         # Save each episode anyways
         save_changes(DB)
         print("\nTABLE", TABLE, "NOW CONTAINS", get_table_length(CUR, TABLE), "ROWS!")
+
+        # Save the training results in a json file
         with open("./resources/json/train_results.json", "w") as f:
             json.dump(RESULTS, f)
 
+    # Close the database
     finally:
         CUR.close()
         DB.close()
-
-
-

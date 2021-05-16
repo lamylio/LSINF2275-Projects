@@ -116,7 +116,6 @@ class Board():
 
 
     def step_results(self):
-        type_at_head = self.get_type(self.snake.head)
         # Snake is dead by wall
         if(self.off_board(self.snake.head)): 
             return -5, "WALL"
@@ -124,6 +123,8 @@ class Board():
         # Has not moved (reversed on himself)
         if not self.snake.has_moved: return -5, "STUCK"
 
+        type_at_head = self.get_type(self.snake.head)
+        
         # Snake is dead by eating his body
         if(type_at_head == self.BOARD_VALUES.get("SNAKE_BODY")):
             return -6, "BODY"
