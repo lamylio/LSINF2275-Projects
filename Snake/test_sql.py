@@ -10,12 +10,12 @@ from utils_sql import *
 # ====================================================================
 
 PARAMS = {
-    'LOOKUP': 2,
+    'LOOKUP': 1,
 
     'BOARD_SIZE': [10,10],
     'SNAKE_START_LENGTH': 3,
 
-    'RENDER_SPEED': 0,
+    'RENDER_SPEED': 5,
     'MAX_STEPS': 1000,
     'EPISODES': 1000,
 
@@ -28,7 +28,7 @@ RESULTS = {
 }
 
 TABLE = "LOOKUP_{}".format(PARAMS.get('LOOKUP'))
-DB_PATH = "./resources/sql/q-values-alpha-smooth-30.db"
+DB_PATH = "./resources/sql/q-values-alpha.db"
 
 # ====================================================================
 if __name__=='__main__':
@@ -83,4 +83,3 @@ if __name__=='__main__':
     finally:
         CUR.close()
         DB.close()
-

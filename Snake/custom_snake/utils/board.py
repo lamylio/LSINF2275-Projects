@@ -23,6 +23,7 @@ Accesses and controls the @Snake component. Assume the matrixes start at [0,0], 
 - display : matrix representing the game with #BOARD_COLORS
 - snake : @Snake instance
 - food : coordinates [x,y] of the food
+- snake_start_length : int
 
 @methods
 - reset() : None : reset the game, instanciate a new @Snake and generate new food.
@@ -34,9 +35,9 @@ Accesses and controls the @Snake component. Assume the matrixes start at [0,0], 
 - get_color(coordinates) : #BOARD_COLORS : returns the #display value at index [coordinates]
 - get_type(coordinates) : #BOARD_VALUES :  returns the #board value at index [coordinates]
 - off_board(coordinates) : bool : returns true if the @Snake#head is outside of the #board
-- get_around(coordinates, radius) : np.array[(2*radius+1, 2*radius+1)] : returns an array with #BOARD_VALUES around the coordinates
 - game_won() : bool : is the game won ? 
-
+- get_around(coordinates, radius) : np.array[(2*radius+1, 2*radius+1)] : returns an array with #BOARD_VALUES around the coordinates
+- get_finite_state(radius) : call #get_around(self.snake.head, radius) and returns it flattened plus food relative position  
 """
 class Board():
 
@@ -45,7 +46,6 @@ class Board():
         "SNAKE_BODY":  1,
         "SNAKE_HEAD": 2,
         "FOOD": 3,
-        "WALL": 4
     }
 
     BOARD_COLORS = {
@@ -112,19 +112,20 @@ class Board():
 
 
     def step_results(self):
+        type_at_head = self.get_type(self.snake.head)
         # Snake is dead by wall
-        if(self.off_board(self.snake.head) or self.get_type(self.snake.head) == self.BOARD_VALUES.get("WALL")): 
+        if(self.off_board(self.snake.head)): 
             return -5, "WALL"
 
         # Has not moved (reversed on himself)
         if not self.snake.has_moved: return -5, "STUCK"
 
         # Snake is dead by eating his body
-        if(self.get_type(self.snake.head) == self.BOARD_VALUES.get("SNAKE_BODY")):
+        if(type_at_head == self.BOARD_VALUES.get("SNAKE_BODY")):
             return -6, "BODY"
 
         # Food eaten
-        if(self.get_type(self.snake.head) == self.BOARD_VALUES.get("FOOD")): 
+        if(type_at_head == self.BOARD_VALUES.get("FOOD")): 
             return 10, "FOOD"
 
         distance = abs(np.linalg.norm(np.subtract(self.snake.head, self.food)))

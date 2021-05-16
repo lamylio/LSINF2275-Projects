@@ -16,13 +16,15 @@ Working environment and entry point with the game @Board component.
 - action_space : instance of @Action representing the set of possible actions. 
 - observation_space : the #board_size surface
 - board_size : vector of length 2 indicating the [height, width] of the #board
-- viewer : @Subplot from matplotlib to draw the #board#display
 - board : instance of @Board
+- figure : @Figure from matplotlib to draw the #board#display
+- viewer(_info, lookup, food) : @SubplotBase from matplotlib to draw additional informations
+- episode : the current episode of the instance.
 
 @methods
 - reset()
 - step(action: int)
-- render(frame_speed:int = .1)
+- render(infos: dict(), frame_speed:int = .1)
 
 """
 class SnakeEnv():
@@ -38,6 +40,7 @@ class SnakeEnv():
         self.viewer = None
         self.viewer_info = None
         self.viewer_lookup = None
+        self.viewer_food = None
         self.episode = 0
 
     def reset(self):
@@ -75,7 +78,7 @@ class SnakeEnv():
         figsize = self.figure.get_size_inches()*self.figure.dpi
 
         # Snake board
-        self.viewer.imshow(self.board.display, extent=[-0.01,self.board_size[0],0,self.board_size[1]],  interpolation='none')
+        self.viewer.imshow(self.board.display, extent=[-0.01,self.board_size[0],0,self.board_size[1]])
         
         # Informations display
         self.viewer_info.text(0.5, 0.60, f"Score: {len(self.board.snake.body) - self.board.snake_start_length+1}", horizontalalignment='center', fontsize=14)
@@ -85,7 +88,7 @@ class SnakeEnv():
         colors_map = list(self.board.BOARD_COLORS.values())
         around = reshape([colors_map[self.board.BOARD_VALUES.get("WALL")] if e == self.board.BOARD_VALUES.get("SNAKE_BODY") 
         else colors_map[e] for e in infos.get('state')[:-2]], (lookup_size,lookup_size,3)).astype("uint8")
-        self.viewer_lookup.imshow(around, extent =[0, lookup_size, 0, lookup_size],  interpolation='none')
+        self.viewer_lookup.imshow(around, extent =[0, lookup_size, 0, lookup_size])
         
         # Food position
         ax, ay = infos.get('state')[-2:]
@@ -93,7 +96,7 @@ class SnakeEnv():
         food[:,:,:] = self.board.BOARD_COLORS.get("EMPTY_SPACE")
         food[1,1] = self.board.BOARD_COLORS.get("SNAKE_HEAD")
         food[1-ax, 1-ay] = self.board.BOARD_COLORS.get("FOOD")
-        self.viewer_food.imshow(food, extent=[0, 3, 0,3],  interpolation='none')
+        self.viewer_food.imshow(food, extent=[0, 3, 0,3])
 
         plt.pause(frame_speed)
 
