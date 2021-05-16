@@ -35,20 +35,20 @@ def plot(scores, mean_scores, epsilons) :
 # ====================================================================
 
 PARAMS = {
-    'LOOKUP': 1,
+    'LOOKUP': 2,
 
     'BOARD_SIZE': [10,10],
     'SNAKE_START_LENGTH': 3,
 
-    'SAVE_EVERY_STEPS': 10,
+    'SAVE_EVERY_STEPS': 30,
     'PLOT_TRAINING': False,
 
-    'EPISODES': 10000,
+    'EPISODES': 30000,
     'MAX_STEPS': 1000,
     
     'MIN_ALPHA': 0.05,
     'MIN_EPSILON': 0.05,
-    'ALPHA_METHOD': "LINEAR", # LINEAR, SMOOTH, SPECIAL
+    'EPSILON_METHOD': "SMOOTH", # LINEAR, SMOOTH, SPECIAL
 
     'EPSILON': 1,
     'GAMMA': 0.9,
@@ -62,11 +62,11 @@ RESULTS = {
 }
 
 TABLE = "LOOKUP_{}".format(PARAMS.get('LOOKUP'))
-DB_PATH = "./resources/sql/q-values-alpha-linear-10.db"
+DB_PATH = "./resources/sql/q-values-alpha-smooth-30.db"
 
 # ====================================================================
 def update_epsilon(epsilon, episode):
-    method = PARAMS.get("ALPHA_METHOD", "LINEAR")
+    method = PARAMS.get("EPSILON_METHOD", "LINEAR")
     min_eps = PARAMS.get("MIN_EPSILON", 0.05)
     max_eps = PARAMS.get("EPISODES", 10000)
     rate = 1/(.99*max_eps)

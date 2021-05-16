@@ -10,7 +10,7 @@ from utils_sql import *
 # ====================================================================
 
 PARAMS = {
-    'LOOKUP': 1,
+    'LOOKUP': 2,
 
     'BOARD_SIZE': [10,10],
     'SNAKE_START_LENGTH': 3,
@@ -28,7 +28,7 @@ RESULTS = {
 }
 
 TABLE = "LOOKUP_{}".format(PARAMS.get('LOOKUP'))
-DB_PATH = "./resources/sql/q-values-alpha-linear-10.db"
+DB_PATH = "./resources/sql/q-values-alpha-smooth-30.db"
 
 # ====================================================================
 if __name__=='__main__':

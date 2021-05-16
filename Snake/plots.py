@@ -28,7 +28,7 @@ def plot_test(scores, mean_scores) :
 # ====================================================================
 
 import json
-with open("./resources/json/test_results_1_linear_1k.json") as f:
+with open("./resources/json/test_results_2_smooth_30k.json") as f:
     RESULTS = json.load(f)
 
 # plot_train(RESULTS["SCORES"], RESULTS["SCORE_MEANS"], RESULTS["EPSILONS"])
