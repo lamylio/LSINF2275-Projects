@@ -46,6 +46,7 @@ class Board():
         "SNAKE_BODY":  1,
         "SNAKE_HEAD": 2,
         "FOOD": 3,
+        "WALL": 4
     }
 
     BOARD_COLORS = {

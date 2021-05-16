@@ -62,9 +62,11 @@ class SnakeEnv():
         if self.figure is None:
             self.figure = plt.figure(num="Snake with Q-Learning", figsize=(8,6))
 
+            # Figure and subplots specifications
             spec = gridspec.GridSpec(1,2, width_ratios= [2,1])
             spec_sub = gridspec.GridSpecFromSubplotSpec(3,1, subplot_spec=spec[1], height_ratios=[1,2,2], hspace=.5)
 
+            # Define all the subplots
             self.viewer = self.figure.add_subplot(spec[0])
             self.viewer_info = self.figure.add_subplot(spec_sub[0])
             self.viewer_lookup = self.figure.add_subplot(spec_sub[1])
@@ -75,7 +77,6 @@ class SnakeEnv():
             self.viewer_info.yaxis.set_visible(False)
 
         self._clean_display(lookup_size)
-        figsize = self.figure.get_size_inches()*self.figure.dpi
 
         # Snake board
         self.viewer.imshow(self.board.display, extent=[-0.01,self.board_size[0],0,self.board_size[1]])
